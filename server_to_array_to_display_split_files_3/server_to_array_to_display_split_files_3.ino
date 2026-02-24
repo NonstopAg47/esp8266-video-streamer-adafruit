@@ -57,7 +57,7 @@ void setup() {
 
   uint16_t startLine = 0;
   // fetch and display images (for movie)
-  for (uint16_t i = 1; i <= 5176; i++) {  //00001 to 05176 are folder names
+  for (uint16_t i = 1; i <= 5176; i+=20) {  //00001 to 05176 are folder names
     // Format i with leading zeros to have a fixed length of 5 digits
     char formattedI[6]; // 5 digits + null terminator
     sprintf(formattedI, "%05d", i);  // pads with zeros automatically
@@ -175,24 +175,29 @@ void readWebBin(const char* url, uint16_t& startLine) {
   uint16_t lineBuffer[width];
 
   for (uint16_t y = 0; y < height; y++) {
-    uint32_t startTime = millis();
+    uint8_t buf[width * 2];
     uint16_t bytesRead = 0;
+    uint32_t startTime = millis();
 
-    // Read a full line at once
-    while (bytesRead < width * 2) {
-      if (stream->available()) {
-        lineBuffer[bytesRead / 2] = (stream->read() << 8);       // high byte
-        lineBuffer[bytesRead / 2] |= stream->read();            // low byte
-        bytesRead += 2;
-      } else {
-        if (millis() - startTime > 5000) {
-          Serial.println("Stream timeout! -> " + String(url));
-          http.end();
-          return;
-        }
-        delay(1);
+  while (bytesRead < width * 2) {
+    if (stream->available()) {
+      int n = stream->readBytes(buf + bytesRead, width*2 - bytesRead);
+      bytesRead += n;
+    } 
+    else {
+      if (millis() - startTime > 5000) {
+        Serial.println("Stream timeout! -> " + String(url));
+        http.end();
+        return;
       }
-    }
+      delay(1);
+      }
+  }
+
+  // convert to 16-bit color
+  for(uint16_t x = 0; x < width; x++) {
+      lineBuffer[x] = (buf[2*x] << 8) | buf[2*x + 1];
+  }
 
     // Draw the row
     tft.drawRGBBitmap(0, startLine + y, lineBuffer, width, 1);
