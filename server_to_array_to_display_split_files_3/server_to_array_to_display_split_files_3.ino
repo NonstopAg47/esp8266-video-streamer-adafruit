@@ -1,3 +1,25 @@
+#define SerialDebug  //comment out this line to disable serial monitor
+
+#ifdef SerialDebug
+  template<typename T>
+  inline void println(T value) { Serial.println(value); }
+
+  template<typename T>
+  inline void println(T value, int format) { Serial.println(value, format); }
+
+  template<typename T>
+  inline void print(T value) { Serial.print(value); }
+#else
+  template<typename T>
+  inline void println(T value) {}
+
+  template<typename T>
+  inline void println(T value, int format) {}
+
+  template<typename T>
+  inline void print(T value) {}
+#endif
+
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <Adafruit_GFX.h>     // Core graphics library
@@ -26,9 +48,13 @@ const char* ssid = "YourSSID";
 const char* password = "YourPassword";
 */
 
+void DispImage(const char* baseUrl, uint8_t numFiles, uint16_t& startLine);
+void readWebBin(const char* url, uint16_t& startLine);
 void setup() {
-  Serial.begin(115200);
-  delay(1000);
+  #ifdef SerialDebug
+    Serial.begin(115200);
+    delay(1000);
+  #endif
 
   // Use this initializer if using a 1.8" TFT screen:
   tft.initR(INITR_BLACKTAB);  // Init ST7735S chip, black tab
@@ -41,38 +67,39 @@ void setup() {
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    Serial.println("Connecting to WiFi...");
+    println("Connecting to WiFi...");
   }
-  Serial.println("Connected to WiFi");
+  println("Connected to WiFi");
 
   uint16_t time = millis();
   // fetch and display images (single image)
   //DispImage("http://192.168.1.5/testingimage/00001", 12); // 12 files to fetch
   time = millis() - time;
-  Serial.println(time, DEC);  //the duration it takes to display a single image
+  println(time, DEC);  //the duration it takes to display a single image
 
 
-  Serial.print("initialising ");
+  print("initialising ");
   time = millis();
 
   uint16_t startLine = 0;
+  char urlLoop[100];  // make sure this is large enough for full URL
   // fetch and display images (for movie)
   for (uint16_t i = 1; i <= 5176; i+=20) {  //00001 to 05176 are folder names
     // Format i with leading zeros to have a fixed length of 5 digits
     char formattedI[6]; // 5 digits + null terminator
     sprintf(formattedI, "%05d", i);  // pads with zeros automatically
-    String urlLoop = String("http://192.168.1.4/testingimage/") + formattedI;
+    sprintf(urlLoop, "http://192.168.1.4/testingimage/%s", formattedI);
   
     //DispImage(urlLoop.c_str(), 12);   // 12 files to fetching
     startLine = 0;
-    DispImage(urlLoop.c_str(), 12, startLine); // 12 .bin files per image
-    Serial.println(i);
+    DispImage(urlLoop, 12, startLine); // 12 .bin files per image
+    println(i);
   }
-  Serial.println("done till 5176 ");
+  println("done till 5176 ");
 
   time = millis() - time;
-  Serial.print("Time taken: ");
-  Serial.println(time, DEC);  //took these many secs to execute
+  print("Time taken: ");
+  println(time, DEC);  //took these many secs to execute
 
   pinMode(LED_BUILTIN, OUTPUT);  // Initialize the LED_BUILTIN pin as an output
 }
@@ -109,8 +136,8 @@ void readWebFile(const char* url, uint16_t displayHeight) {
   if (httpResponseCode == HTTP_CODE_OK) {
     // File was successfully retrieved
     String payload = http.getString();  // Get the entire response        
-    //Serial.println("File contents:");
-    //Serial.println(payload);
+    //println("File contents:");
+    //println(payload);
 
     // Parse and assign payload to a dynamically allocated uint16_t array
 
@@ -136,7 +163,7 @@ void readWebFile(const char* url, uint16_t displayHeight) {
     }
   } 
   else {
-    Serial.println("HTTP request failed: " + String(httpResponseCode) + ", " + url);
+    println("HTTP request failed: " + String(httpResponseCode) + ", " + url);
   }
 
   http.end();
@@ -145,9 +172,10 @@ void readWebFile(const char* url, uint16_t displayHeight) {
 
 // Display a full image by fetching multiple .bin files
 void DispImage(const char* baseUrl, uint8_t numFiles, uint16_t& startLine) {
+  char url[120];  // adjust size as needed
   for (uint8_t i = 1; i <= numFiles; i++) {
-    String url = String(baseUrl) + "/output_" + String(i) + ".bin";
-    readWebBin(url.c_str(), startLine); // startLine updates automatically
+    sprintf(url, "%s/output_%d.bin", baseUrl, i);
+    readWebBin(url, startLine); // startLine updates automatically
   }
 }
 
@@ -157,14 +185,14 @@ void readWebBin(const char* url, uint16_t& startLine) {
   int httpCode = http.GET();
 
   if (httpCode != HTTP_CODE_OK) {
-    Serial.println("HTTP request failed: " + String(httpCode) + " -> " + url);
+    println("HTTP request failed: " + String(httpCode) + " -> " + url);
     http.end();
     return;
   }
 
   int contentLength = http.getSize();
   if (contentLength <= 0) {
-    Serial.println("Empty file: " + String(url));
+    println("Empty file: " + String(url));
     http.end();
     return;
   }
@@ -194,7 +222,7 @@ void readWebBin(const char* url, uint16_t& startLine) {
         bytesRead += n;
       } else {
         if (millis() - startTime > 5000) {
-          Serial.println("Stream timeout! -> " + String(url));
+          println("Stream timeout! -> " + String(url));
           http.end();
           return;
         }
