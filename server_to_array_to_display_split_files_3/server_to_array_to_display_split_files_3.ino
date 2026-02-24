@@ -151,7 +151,7 @@ void DispImage(const char* baseUrl, uint8_t numFiles, uint16_t& startLine) {
   }
 }
 
-// Optimized function to read a .bin file and display it
+// Optimized function to read a .bin file and display 4 lines at a time
 void readWebBin(const char* url, uint16_t& startLine) {
   http.begin(wifiClient, url);
   int httpCode = http.GET();
@@ -163,7 +163,7 @@ void readWebBin(const char* url, uint16_t& startLine) {
   }
 
   int contentLength = http.getSize();
-  if (contentLength == 0) {
+  if (contentLength <= 0) {
     Serial.println("Empty file: " + String(url));
     http.end();
     return;
@@ -171,38 +171,50 @@ void readWebBin(const char* url, uint16_t& startLine) {
 
   WiFiClient* stream = http.getStreamPtr();
   const uint16_t width = 128;
-  uint16_t height = contentLength / (2 * width); // rows in this file
-  uint16_t lineBuffer[width];
+  const uint16_t linesPerChunk = 4; // read 4 lines at once
+  uint16_t totalLines = contentLength / (2 * width);
 
-  for (uint16_t y = 0; y < height; y++) {
-    uint8_t buf[width * 2];
-    uint16_t bytesRead = 0;
+  // Buffers to hold 4 lines at a time
+  uint8_t buf[width * 2 * linesPerChunk];       // raw bytes
+  uint16_t lineBuffer[width * linesPerChunk];   // 16-bit colors
+
+  uint16_t linesRead = 0;
+
+  while (linesRead < totalLines) {
+    // Determine how many lines to read in this chunk (last chunk may be less than 4)
+    uint16_t linesThisChunk = min(linesPerChunk, (uint16_t)(totalLines - linesRead));
+    uint32_t bytesToRead = linesThisChunk * width * 2;
+    uint32_t bytesRead = 0;
     uint32_t startTime = millis();
 
-  while (bytesRead < width * 2) {
-    if (stream->available()) {
-      int n = stream->readBytes(buf + bytesRead, width*2 - bytesRead);
-      bytesRead += n;
-    } 
-    else {
-      if (millis() - startTime > 5000) {
-        Serial.println("Stream timeout! -> " + String(url));
-        http.end();
-        return;
+    // Read the chunk from the HTTP stream
+    while (bytesRead < bytesToRead) {
+      if (stream->available()) {
+        int n = stream->readBytes(buf + bytesRead, bytesToRead - bytesRead);
+        bytesRead += n;
+      } else {
+        if (millis() - startTime > 5000) {
+          Serial.println("Stream timeout! -> " + String(url));
+          http.end();
+          return;
+        }
+        delay(1);
       }
-      delay(1);
+    }
+
+    // Convert raw bytes to 16-bit color values
+    for (uint16_t line = 0; line < linesThisChunk; line++) {
+      for (uint16_t x = 0; x < width; x++) {
+        lineBuffer[line * width + x] = (buf[(line * width + x) * 2] << 8) | buf[(line * width + x) * 2 + 1];
       }
+    }
+
+    // Draw all lines in this chunk at once
+    tft.drawRGBBitmap(0, startLine + linesRead, lineBuffer, width, linesThisChunk);
+
+    linesRead += linesThisChunk;
   }
 
-  // convert to 16-bit color
-  for(uint16_t x = 0; x < width; x++) {
-      lineBuffer[x] = (buf[2*x] << 8) | buf[2*x + 1];
-  }
-
-    // Draw the row
-    tft.drawRGBBitmap(0, startLine + y, lineBuffer, width, 1);
-  }
-
-  startLine += height; // Update start line for next .bin file
+  startLine += totalLines; // update start line for next .bin file
   http.end();
 }
