@@ -1,3 +1,10 @@
+/*
+// wifi_config.h contains
+#pragma once
+
+const char* ssid = "YourSSID";
+const char* password = "YourPassword";
+*/
 #define SerialDebug  //comment out this line to disable serial monitor
 
 #ifdef SerialDebug
@@ -40,13 +47,11 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
 HTTPClient http;
 WiFiClient wifiClient;
 
-/*
-// wifi_config.h contains
-#pragma once
-
-const char* ssid = "YourSSID";
-const char* password = "YourPassword";
-*/
+//global allocation to avoid reallocating each time
+const uint16_t width = 128;
+const uint16_t linesPerChunk = 16; // read 16 lines at once
+uint8_t buf[width * 2 * linesPerChunk];       // raw bytes
+uint16_t lineBuffer[width * linesPerChunk];   // 16-bit colors
 
 void DispImage(const char* baseUrl, uint8_t numFiles, uint16_t& startLine);
 void readWebBin(const char* url, uint16_t& startLine);
@@ -58,6 +63,7 @@ void setup() {
 
   // Use this initializer if using a 1.8" TFT screen:
   tft.initR(INITR_BLACKTAB);  // Init ST7735S chip, black tab
+  tft.setSPISpeed(27000000);
 
   delay(500);
   tft.fillScreen(ST77XX_BLACK);
@@ -84,7 +90,7 @@ void setup() {
   uint16_t startLine = 0;
   char urlLoop[100];  // make sure this is large enough for full URL
   // fetch and display images (for movie)
-  for (uint16_t i = 1; i <= 5176; i+=20) {  //00001 to 05176 are folder names
+  for (uint16_t i = 1; i <= 5176; i++) {  //00001 to 05176 are folder names
     // Format i with leading zeros to have a fixed length of 5 digits
     char formattedI[6]; // 5 digits + null terminator
     sprintf(formattedI, "%05d", i);  // pads with zeros automatically
@@ -113,62 +119,6 @@ void loop() {
   delay(500);                      // Wait for two seconds (to demonstrate the active low LED)
 }
 
-/*
-//write 1 full image
-void DispImage(const char* baseUrl, uint8_t numFiles) {
-  uint16_t displayHeight = 0;
-  // Iterate through the specified number of files and call readWebFile for each
-  for (uint8_t i = 1; i <= numFiles; i++) {
-    String url = String(baseUrl) + "/output_" + String(i) + ".txt";
-    displayHeight = i * 14 - 13;          // Calculate display height
-    readWebFile(url.c_str(), displayHeight);  //eg: readWebFile("http://192.168.1.3/testingimage/oppenoutput/output_1.txt", displayHeight);
-  }
-}
-
-//writes partial image
-void readWebFile(const char* url, uint16_t displayHeight) {
-  // Specify the URL of the file to read and pass the WiFiClient object
-  http.begin(wifiClient, url);
-
-  // Send the GET request
-  int16_t httpResponseCode = http.GET();
-
-  if (httpResponseCode == HTTP_CODE_OK) {
-    // File was successfully retrieved
-    String payload = http.getString();  // Get the entire response        
-    //println("File contents:");
-    //println(payload);
-
-    // Parse and assign payload to a dynamically allocated uint16_t array
-
-    const char* delimiters = ", ";
-    char* token = strtok(const_cast<char*>(payload.c_str()), delimiters);
-
-    uint16_t kohli[128];  // fixed buffer for one line //kohli is the array in which colors are stored
-    uint8_t count = 0;
-
-    //char* token = strtok(const_cast<char*>(payload.c_str()), delimiters);
-    //int displayHeight = 1; // Starting height for display
-
-    while (token != NULL) {
-      kohli[count++] = strtoul(token, NULL, 16);  // Convert hex string to uint16_t
-
-      //writes one line at a time
-      if (count == 128) {
-        tft.drawRGBBitmap(1, displayHeight++, kohli, 128, 1);
-        count = 0;  // reset for next line
-      }
-
-      token = strtok(NULL, delimiters);
-    }
-  } 
-  else {
-    println("HTTP request failed: " + String(httpResponseCode) + ", " + url);
-  }
-
-  http.end();
-}
-*/
 
 // Display a full image by fetching multiple .bin files
 void DispImage(const char* baseUrl, uint8_t numFiles, uint16_t& startLine) {
@@ -182,6 +132,7 @@ void DispImage(const char* baseUrl, uint8_t numFiles, uint16_t& startLine) {
 // Optimized function to read a .bin file and display 4 lines at a time
 void readWebBin(const char* url, uint16_t& startLine) {
   http.begin(wifiClient, url);
+  http.setReuse(true); 
   int httpCode = http.GET();
 
   if (httpCode != HTTP_CODE_OK) {
@@ -198,13 +149,10 @@ void readWebBin(const char* url, uint16_t& startLine) {
   }
 
   WiFiClient* stream = http.getStreamPtr();
-  const uint16_t width = 128;
-  const uint16_t linesPerChunk = 4; // read 4 lines at once
   uint16_t totalLines = contentLength / (2 * width);
 
   // Buffers to hold 4 lines at a time
-  uint8_t buf[width * 2 * linesPerChunk];       // raw bytes
-  uint16_t lineBuffer[width * linesPerChunk];   // 16-bit colors
+
 
   uint16_t linesRead = 0;
 
@@ -226,7 +174,7 @@ void readWebBin(const char* url, uint16_t& startLine) {
           http.end();
           return;
         }
-        delay(1);
+        //delay(1);
       }
     }
 
