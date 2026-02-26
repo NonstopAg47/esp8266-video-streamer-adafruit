@@ -12,9 +12,13 @@ Install [Arduino IDE 2.1.1](https://github.com/arduino/arduino-ide/releases/tag/
 
 Arduino IDE -> File -> Preferences -> Additional boards manager URLs -> https://arduino.esp8266.com/stable/package_esp8266com_index.json
 
-Arduino IDE -> Tools -> Upload Speed -> 115200
+Arduino IDE -> Tools -> Board -> esp8266 -> NodeMCU 1.0 (ESP-12E Module)
 
-Arduino IDE -> Tools -> Serial Monitor -> 115200
+Arduino IDE -> Tools -> Upload Speed -> 912600
+
+Arduino IDE -> Tools -> Serial Monitor -> 921600
+
+Arduino IDE -> Tools -> CPU Frequency -> 160 MHz
 
 ## MAIN
 ### PREPROCESSING
