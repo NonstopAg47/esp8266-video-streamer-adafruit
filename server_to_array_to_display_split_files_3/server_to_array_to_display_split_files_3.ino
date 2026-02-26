@@ -60,7 +60,7 @@ void DispImage(const char* baseUrl, uint8_t numFiles, uint16_t& startLine);
 void readWebBin(const char* url, uint16_t& startLine);
 void setup() {
   #ifdef SerialDebug
-    Serial.begin(115200);
+    Serial.begin(921600);
     delay(1000);
   #endif
 
