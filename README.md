@@ -36,3 +36,8 @@ Run `server_to_array_to_display_split_files_3/server_to_array_to_display_split_f
 > Delete temp directory after running `preprocess.sh`
 >
 > URL in `server_to_array_to_display_split_files_3/server_to_array_to_display_split_files_3.ino` follows the format `http://domain-url/testingimage/00001"`. Ensure folder name matches in server or modify the format
+
+
+### To do
+
+Check for faster lib - tft_espi ?
