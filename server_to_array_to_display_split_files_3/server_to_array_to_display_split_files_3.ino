@@ -150,7 +150,7 @@ void readWebBin(const char* url, uint16_t& startLine) {
     return;
   }
 
-  int contentLength = http.getSize();
+  int contentLength = http.getSize();  //total num of bytes in chunk //2 bytes per pixel
   if (contentLength <= 0) {
     println("Empty file: " + String(url));
     http.end();

@@ -69,7 +69,7 @@ class Preprocess_Utils:
         # Create a list to store binary pixel data
         binary_data = bytearray()
 
-        # Loop through each pixel and convert to 16-bit RGB565
+        # Loop through each pixel and convert to 16-bit RGB565 and then as raw bytes
         for y in range(height):
             for x in range(width):
                 r, g, b = image.getpixel((x, y))
@@ -85,7 +85,7 @@ class Preprocess_Utils:
         os.makedirs(save_dir, exist_ok=True)
 
         # Split binary data into chunks of 1792 pixels (each pixel = 2 bytes)
-        chunk_size = 1792 * 2  # 1792 pixels * 2 bytes per pixel
+        chunk_size = 1792 * 2  # 1792 pixels (128x14) * 2 bytes per pixel
         for i in range(0, len(binary_data), chunk_size):
             chunk = binary_data[i:i + chunk_size]
             output_file = os.path.join(save_dir, f'output_{i // chunk_size + 1}.bin')
