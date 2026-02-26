@@ -52,7 +52,7 @@ WiFiClient wifiClient;
 
 //global allocation to avoid reallocating each time
 const uint16_t width = 128;
-const uint16_t linesPerChunk = 16; // read 16 lines at once
+const uint16_t linesPerChunk = 14; // read 14 lines at once (128x14) (1792 pixels)
 uint8_t buf[width * 2 * linesPerChunk];       // raw bytes
 uint16_t lineBuffer[width * linesPerChunk];   // 16-bit colors
 
