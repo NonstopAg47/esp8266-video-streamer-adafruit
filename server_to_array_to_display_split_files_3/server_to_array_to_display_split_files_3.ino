@@ -65,7 +65,7 @@ void setup() {
   #endif
 
   // Use this initializer if using a 1.8" TFT screen:
-  tft.initR(INITR_BLACKTAB);  // Init ST7735S chip, black tab
+  tft.initR(INITR_GREENTAB);  // Init ST7735S chip, green tab
   tft.setSPISpeed(40000000);
 
   delay(500);
@@ -190,7 +190,12 @@ void readWebBin(const char* url, uint16_t& startLine) {
     // Convert raw bytes to 16-bit color values
     for (uint16_t line = 0; line < linesThisChunk; line++) {
       for (uint16_t x = 0; x < width; x++) {
-        lineBuffer[line * width + x] = (buf[(line * width + x) * 2] << 8) | buf[(line * width + x) * 2 + 1];
+        //for rgb for display with black tab
+        //lineBuffer[line * width + x] = (buf[(line * width + x) * 2] << 8) | buf[(line * width + x) * 2 + 1];
+
+        //for bgr for display with green tab
+        uint16_t pixel = (buf[(line * width + x) * 2] << 8) | buf[(line * width + x) * 2 + 1];
+        lineBuffer[line * width + x] = ((pixel & 0x001F) << 11) | (pixel & 0x07E0) | ((pixel & 0xF800) >> 11);
       }
     }
 
