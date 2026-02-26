@@ -1,0 +1,41 @@
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+
+const char* ssid = "";           // Your Wi-Fi network SSID
+const char* password = ""; // Your Wi-Fi network password
+const char* serverAddress = "http://192.168.1.2/testingimage/download.jpg"; // Replace with your computer's IP address and image path
+
+void setup() {
+  Serial.begin(115200);
+  delay(10);
+
+  // Connect to Wi-Fi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+  Serial.println("Connected to WiFi");
+}
+
+void loop() {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    WiFiClient client; // Create a WiFiClient object
+
+    // Make a GET request to check if the file exists
+    http.begin(client, serverAddress);
+
+    int httpCode = http.GET();
+
+    if (httpCode == HTTP_CODE_OK) {
+      Serial.println("File exists (Yes)");
+    } else {
+      Serial.println("File does not exist (No)");
+    }
+
+    http.end();
+  }
+
+  delay(10000); // Wait for a while before checking again
+}

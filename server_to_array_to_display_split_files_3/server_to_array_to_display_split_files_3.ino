@@ -1,11 +1,14 @@
 /*
-// wifi_config.h contains
+// config.h contains
 #pragma once
 
-const char* ssid = "YourSSID";
-const char* password = "YourPassword";
-*/
+const char* ssid = "SSID";
+const char* password = "PASSWORD";
+const char* ipconfig = "192.168.1.3";  //check in cmd -> ipconfig  // server url
+const uint16_t NumOfFiles = 52;
 #define SerialDebug  //comment out this line to disable serial monitor
+*/
+#include "config.h"
 
 #ifdef SerialDebug
   template<typename T>
@@ -32,8 +35,8 @@ const char* password = "YourPassword";
 #include <Adafruit_GFX.h>     // Core graphics library
 #include <Adafruit_ST7735.h>  // Hardware-specific library for ST7735
 #include <SPI.h>
-#include "wifi_config.h"
 
+//pin definitions
 #define TFT_CS 3   //RX
 #define TFT_RST 4  //D2
 #define TFT_DC 2   //D4
@@ -63,7 +66,7 @@ void setup() {
 
   // Use this initializer if using a 1.8" TFT screen:
   tft.initR(INITR_BLACKTAB);  // Init ST7735S chip, black tab
-  tft.setSPISpeed(27000000);
+  tft.setSPISpeed(40000000);
 
   delay(500);
   tft.fillScreen(ST77XX_BLACK);
@@ -90,22 +93,28 @@ void setup() {
   uint16_t startLine = 0;
   char urlLoop[100];  // make sure this is large enough for full URL
   // fetch and display images (for movie)
-  for (uint16_t i = 1; i <= 5176; i++) {  //00001 to 05176 are folder names
+  for (uint16_t i = 1; i <= NumOfFiles; i++) {  //00001 to NumOfFiles are folder names
     // Format i with leading zeros to have a fixed length of 5 digits
     char formattedI[6]; // 5 digits + null terminator
     sprintf(formattedI, "%05d", i);  // pads with zeros automatically
-    sprintf(urlLoop, "http://192.168.1.4/testingimage/%s", formattedI);
+    sprintf(urlLoop, "http://%s/testingimage/%s", ipconfig, formattedI);
   
-    //DispImage(urlLoop.c_str(), 12);   // 12 files to fetching
+    //DispImage(urlLoop.c_str(), 12);   // 12 files to fetch
     startLine = 0;
     DispImage(urlLoop, 12, startLine); // 12 .bin files per image
+    /*
+    NOTE:
+      i made it 12 files coz more than 1808 pixels being assigned to an array crashes. 
+      i rounded and used 1792 pixels (128x14) and split 1 image to 12 sections
+    */
     println(i);
   }
-  println("done till 5176 ");
+  print("done till ");
+  println(NumOfFiles);
 
   time = millis() - time;
   print("Time taken: ");
-  println(time, DEC);  //took these many secs to execute
+  println(time, DEC);  //took these many ms to execute
 
   pinMode(LED_BUILTIN, OUTPUT);  // Initialize the LED_BUILTIN pin as an output
 }
