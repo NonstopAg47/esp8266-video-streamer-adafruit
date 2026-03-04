@@ -136,6 +136,10 @@ def extract_video(input_file, output_dir):
 def drop_frames(folder_path, interval = 31):
     # Specify the interval (keep every nth image)   set it bw 30 and 40  if vid is fast reduce interval
 
+    #dont drop frames
+    if interval == 0:
+        return
+
     # Get a list of all files in the folder
     files = os.listdir(folder_path)
 

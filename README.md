@@ -19,10 +19,10 @@ your preferred server
 * Arduino IDE -> Tools -> CPU Frequency -> 160 MHz
 
 * Arduino IDE -> Sketch -> Include Libraries -> Manage Libraries ->
-    * Adafruit GFX Library by Adafruit
-    * Adafruit ST7735 and ST7789 Library by Adafruit
+    * `Adafruit GFX Library by Adafruit`
+    * `Adafruit ST7735 and ST7789 Library by Adafruit`
 
-Setup and activate env if preferred
+* Setup and activate env if preferred
 
 ## MAIN
 ### PREPROCESSING
@@ -46,3 +46,7 @@ Setup and activate env if preferred
 > Delete temp directory after running `preprocess.sh`
 >
 > URL in `server_to_array_to_display_split_files_3/server_to_array_to_display_split_files_3.ino` follows the format `http://domain-url/testingimage/00001"`. Ensure folder name matches in server or modify the format
+
+
+## Todo
+Refer my [Other Project](https://github.com/NonstopAg47/esp8266-video-streamer-tft-espi) for ways to improve performance
