@@ -32,7 +32,7 @@ your preferred server
 
 * Run XAMPP Apache Server or your preferred server
 
-* Configure `server_to_array_to_display_split_files_3/config.h`
+* Configure `server_to_array_to_display_split_files_3/config.h` (refer `server_to_array_to_display_split_files_3/server_to_array_to_display_split_files_3.ino`)
 
 * Run `server_to_array_to_display_split_files_3/server_to_array_to_display_split_files_3.ino`
 
